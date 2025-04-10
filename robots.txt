@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://prepocet-epizod.netlify.app/sitemap.xml
