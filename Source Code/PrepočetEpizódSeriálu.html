@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Odhad počtu epizód preloženého seriálu na základe dát pôvodnej nepreloženej verzie seriálu.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">  
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <title>Koľko časti by mohol mať seriál?</title>  
+  <style>
+	  html, body {
+	  width: 100%;
+	  max-width: 100%;
+	  overflow-x: hidden;
+	}
+	.container, .row, .mb-3 {
+	  max-width: 100% !important;
+	  margin-left: auto;
+	  margin-right: auto;
+	  overflow-x: hidden;
+	}
+	.row {
+	  display: flex;
+	  flex-wrap: wrap;
+	  justify-content: center;
+	}
+	.mb-3 {
+	  width: 100%;
+	}
+	.custom-padding-mb3-text {
+	  padding-left: 12px; 
+	  padding-right: 12px;
+	  box-sizing: border-box;
+	}
+	#result {
+	  margin-left: 11px;
+	  width: calc(100% - 19px);  
+	  box-sizing: border-box;
+	}
+	  /* Svetlý režim */
+    body {
+      background-color: #ffffff;
+      color: #000000;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    /* TMAVÝ REŽIM */
+    body.dark-mode {
+      background-color: #121212;
+      color: #ffffff;
+    }
+    body.dark-mode .form-control {
+      background-color: #555555;
+      color: #ffffff;
+      border-color: #ffffff;
+    }
+    body.dark-mode .form-label {
+      color: #ffffff;
+    }
+    body.dark-mode .btn-primary {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+    }
+    body.dark-mode .btn-danger {
+      background-color: #dc3545;
+      border-color: #dc3545;
+    }
+    body.dark-mode #result {
+      background-color: #333333 !important;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.2);
+    }
+    body:not(.dark-mode) #result {
+      background-color: #e9ecef;
+      color: #000000;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    body.dark-mode ::placeholder {
+      color: #cccccc;
+    }
+    /* PREPÍNAČ TMAVÝ/SVETLÝ REŽIM SLIDER */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+	  top: -40px;
+	  left: 94.5vw;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #fbc02d; 
+      transition: background-color 0.4s ease-in-out;
+      border-radius: 34px;
+    }
+    .slider:before {
+      content: "";
+      position: absolute;
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: transform 0.4s ease-in-out;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon {
+      position: absolute;
+      font-size: 16px;
+      width: 26px;
+      height: 26px;
+      text-align: center;
+      line-height: 26px;
+      left: 4px;
+      bottom: 4px;
+      transition: transform 0.4s ease-in-out, opacity 0.3s ease-in-out;
+      opacity: 1;
+    }
+    body.dark-mode .slider {
+      background-color: #333;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    input:checked + .slider .icon {
+      transform: translateX(26px) rotate(360deg);
+      opacity: 1;
+	}
+	body.dark-mode input:disabled {
+	background-color: #2d2d2d;
+	border-color: #000000;
+	}
+    body:not(.dark-mode) #episodeMsgAlert {
+	   color: #f7c600 !important;
+	}
+    body.dark-mode #episodeMsgAlert {
+	   color: #f7c600 !important;
+    }
+    body:not(.dark-mode) #minMsgAlert {
+	   color: #f7c600 !important;
+	}
+    body.dark-mode #minMsgAlert {
+	   color: #f7c600 !important;
+    }
+    body:not(.dark-mode) #maxMsgAlert {
+	   color: #f7c600 !important;
+	}
+    body.dark-mode #maxMsgAlert {
+	   color: #f7c600 !important;
+    }
+	body:not(.dark-mode) #hoursMsgAlert {
+		color: #f7c600 !important;
+	}
+	body.dark-mode #hoursMsgAlert {
+	   color: #f7c600 !important;
+	}
+	body:not(.dark-mode) #minutesMsgAlert {
+		color: #f7c600 !important;
+	}
+	body.dark-mode #minutesMsgAlert {
+	   color: #f7c600 !important;
+	}
+	  #helpIcon {
+		font-size: 1.7rem !important;
+	}
+	/* Štýly pre časový selektor */
+	.time-adjuster {
+	  display: inline-flex;
+	  align-items: center;
+	  gap: 5px;
+	  margin-left: 10px;
+	}
+	.time-adjuster select {
+	  width: auto;
+	  margin-right: 5px;
+	  min-width: 60px;
+	}
+	.time-adjuster button {
+	  margin: 0 2px;
+	  padding: 2px 8px;
+	}
+    /* RESPONZÍVNE ÚPRAVY PRE MOBILNÉ ZARIADENIA */
+    @media (max-width: 768px) {
+      /* Úprava nadpisu */
+      .fw-bold.mb-0 {
+        font-size: 1.50rem;
+		color:#4CAF50;
+      }
+      /* ? */
+      #helpIcon {
+        position: absolute !important;
+        right: auto !important;
+        left: -1px !important;
+        top: -42px !important;
+		z-index: 1000;
+      }
+	  #helpIcon {
+	  font-size: 1.7rem !important;
+	}
+      #tooltip {
+        font-size: 12px;
+        max-width: 180px;
+        padding: 8px;
+        right: 0;
+        left: auto;
+        text-align: right;
+      } 
+      /* "Celkový čas seriálu" */
+      .mb-3 .form-label {
+        padding-left: 12px; /* Zarovnanie s poľom */
+      }
+	  /* "Min" a "Max" minutáž */
+	  .mb-3.row .col .form-label {
+		padding-left: 0px;
+	  }
+	  .mb-3.custom-padding-mb3-text .form-label {
+		padding-left: 0px;
+	  }
+      /* Nadpis */
+      .text-center.mb-4.position-relative {
+        margin-top: 10px !important;
+        padding-top: 20px;
+      }
+      /* Úprava rozloženia prepínača */
+	  .toggle-switch {
+		right: auto;   
+        left: 85%; 
+	  }
+      .form-control {
+        font-size: 16px;
+        padding: 10px;
+      }
+      .mb-3 {
+        margin-bottom: 1.5rem !important;
+      }
+      .form-label {
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+      .col-md-6 {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      /* TLAČIDLÁ */
+      .d-flex.align-items-end.my-3 {
+        flex-direction: column;
+        align-items: center !important;
+        gap: 10px;
+        margin: 1rem 0;
+      }
+      .d-flex.align-items-end.my-3 .btn {
+        margin-left: 0 !important;
+        width: 90%;
+        max-width: 200px;
+      }
+      /* Výsledok box */
+      #result {
+        margin-left: 5px !important;
+        width: calc(100% - 10px) !important;
+        padding: 10px;
+        font-size: 14px;
+      }
+	  /* Fix medzery medzi nadpisom a prepinačmi */ 
+	  .text-center.mb-4.position-relative {
+	  	margin-top: -36px !important;
+	  }
+	  .text-center.mb-4.position-relative p {
+	  	margin-top: 0 !important;
+	  	margin-bottom: 0 !important;
+	  }
+      /* RESPONZÍVNE ÚPRAVY PRE ČASOVÝ SELEKTOR */
+	  .time-adjuster {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		margin-left: 5px;
+	  }
+	  .time-adjuster select {
+		width: auto;
+		min-width: 50px;
+		font-size: 12px;
+	  }
+	  .time-adjuster .btn-group {
+		display: flex;
+		gap: 4px;
+	  }
+	  .time-adjuster button {
+		padding: 4px 12px;
+		font-size: 14px;
+		min-width: 30px;
+		min-height: 30px;
+	  }
+	}
+  </style>
+</head>
+<body class="container py-5 dark-mode">
+    <label class="toggle-switch">
+      <input type="checkbox" id="themeToggle" onchange="toggleDarkMode()">
+      <span class="slider">
+        <span class="icon">🌞</span>
+      </span>
+    </label>
+
+	<div class="text-center mb-4 position-relative" style="margin-top: -26px;">
+	  <span id="helpIcon" style="
+		cursor: pointer;
+		font-size: 20px;
+		position: absolute;
+		left: 5px;
+		top: -1px;
+	  ">❓</span>
+	  <h2 class="fw-bold mb-0">
+		<a href="https://www.csfd.sk/" target="_blank" style="text-decoration: none; color: inherit;">
+		  Prepočet epizód seriálu
+		</a>
+	  </h2>
+	</div>
+
+	<div id="tooltip" style="
+	  display: none;
+	  position: absolute;
+	  background: rgba(0, 0, 0, 0.9);
+	  color: white;
+	  padding: 10px;
+	  border-radius: 5px;
+	  width: auto;
+	  font-size: 14px;
+	  text-align: left;
+	  z-index: 1000;
+	  pointer-events: none;
+	">
+	  <p style="margin-bottom: 0;"><strong>Presnejší výpočet:</strong> Zadaj celkový čas + rozsah preložených epizód.</p>
+
+	  <p style="margin-top: 10px; margin-bottom: 0;"><strong>Odhadovaný počet epizód:</strong> Zadaj min-max minutáž pôvodného jazyka + počet epizód + rozsah minutáže preložených epizód.</p>
+	</div>
+		
+	<div class="mb-3">
+	  <label class="form-label" style="display: block; padding-left: 10px;">
+		Celkový čas seriálu:
+	  </label>
+	  <div class="row">
+		<div class="col-md-6">
+		  <input type="number" id="hours" class="form-control" placeholder="Hodiny" min="0">
+		  <span id="hoursMsgAlert" style="color: gray; font-size: 0.9em;"></span>
+		</div>
+		<div class="col-md-6">
+		  <input type="number" id="minutes" class="form-control" placeholder="Minúty" min="0">
+		  <span id="minutesMsgAlert" style="color: gray; font-size: 0.9em;"></span>
+		</div>
+	  </div>
+	</div> 
+
+  <div class="mb-3 row">
+    <div class="col">
+      <label class="form-label">Min. minutáž (dĺžka epizódy) v pôvodnom jazyku:</label>
+      <input type="number" id="borderMin" class="form-control" placeholder="napr. 100" min="0" oninput="validateInput(this)">
+	  <small id="minMsgAlert" class="text-muted"></small>
+    </div>
+    <div class="col">
+      <label class="form-label">Max. minutáž (dĺžka epizódy) v pôvodnom jazyku:</label>
+      <input type="number" id="borderMax" class="form-control" placeholder="napr. 200" min="0" oninput="validateInput(this)">
+	  <small id="maxMsgAlert" class="text-muted"></small>
+    </div>
+  </div>
+  
+  <div class="mb-3 custom-padding-mb3-text">
+    <label class="form-label">Počet epizód v pôvodnom jazyku:</label>
+    <input type="text" id="episodes" class="form-control" placeholder="napr. 50 (vrátane podpory súčtu epizód)">
+    <small id="episodeMsgAlert" class="text-muted"></small>
+  </div>
+  
+  <div class="mb-3 custom-padding-mb3-text">
+    <label class="form-label">Rozsah minutáže preložených epizód:</label>
+    <input type="text" id="episodeRange" class="form-control" placeholder="Nechaj prázdne pre predvolených 40-50 alebo zadaj iný rozsah. Možeš zadať aj konkretnú hodnotu napr. 45.">
+  </div>
+  
+	<div id="result" class="mt-4 border"></div>
+  
+	<div class="d-flex align-items-end my-3">
+		<button class="btn btn-primary px-5 py-2 rounded-pill" onclick="calculateEpisodes()" style="margin-left: 1vw;">Vypočítať</button>
+		<button class="btn btn-danger px-4 py-2 rounded-pill" onclick="clearInputs()" style="margin-left: 77vw;">Vymazať</button>
+	</div>
+
+
+  <script>
+   //Funkcia kontroluje stav tmavého režimu v localStorage
+    document.addEventListener("DOMContentLoaded", function () {
+      if (localStorage.getItem("darkMode") === "true") {
+        document.body.classList.add("dark-mode");
+        document.getElementById("themeToggle").checked = true;
+        document.querySelector(".slider .icon").textContent = "🌙";
+      }
+    });
+
+	// Funkcia na prepínanie medzi svetlým a tmavým režimom
+    function toggleDarkMode() {
+        document.body.classList.toggle("dark-mode");
+        let sliderIcon = document.querySelector(".slider .icon");
+        let isDark = document.body.classList.contains("dark-mode");
+
+        sliderIcon.style.opacity = "0";
+        setTimeout(() => {
+            sliderIcon.textContent = isDark ? "🌙" : "🌞";
+            sliderIcon.style.opacity = "1";
+        }, 200);
+		
+        localStorage.setItem("darkMode", isDark ? "true" : "false");
+    }
+
+    window.onload = () => {
+        let savedDarkMode = localStorage.getItem("darkMode");
+        let sliderIcon = document.querySelector(".slider .icon");
+        let themeToggle = document.querySelector("#themeToggle");
+
+        if (savedDarkMode === null) {
+            savedDarkMode = "true"; // Predvolený je tmavý režim
+            localStorage.setItem("darkMode", "true"); // Predvolený je tmavý režim
+        }
+
+        if (savedDarkMode === "true") {
+            document.body.classList.add("dark-mode");
+            themeToggle.checked = true;
+            sliderIcon.textContent = "🌙";
+        } else {
+            document.body.classList.remove("dark-mode");
+            themeToggle.checked = false;
+            sliderIcon.textContent = "🌞";
+        }
+    };
+
+	// Ak hodnota vstupu v hodinach alebo minutách obsahuje pomlčku ('-'), odstráni ju.
+    function validateInput(input) {
+      if (input.value.includes('-')) {
+        input.value = input.value.replace('-', '');
+      }
+    }
+
+    // Premenné pre ukladanie aktuálneho času
+    let currentTotalMinutes = 0;
+    let isEstimatedTime = false;
+
+	// Funkcia na výpočet počtu epizód na základe zadaných vstupov
+    function calculateEpisodes() {
+	  // Získanie hodnôt vstupov a výpočet celkových minút
+      let hours = parseInt(document.getElementById("hours").value) || 0;
+      let minutes = parseInt(document.getElementById("minutes").value) || 0;
+      let totalMinutes = (hours * 60) + minutes;
+      
+	  // Získanie minimálnej a maximálnej dĺžky epizódy v pôvodnom jazyku
+	  let borderMin = parseInt(document.getElementById("borderMin").value) || 0;
+      let borderMax = parseInt(document.getElementById("borderMax").value) || 0;
+      
+	   // Získanie počtu epizód v pôvodnom jazyku
+	  let episodes = parseEpisodeCount(document.getElementById("episodes").value);
+      
+	  // Spracovanie rozsahu minutáže preložených epizód
+	  let rangeInput = parseRange(document.getElementById("episodeRange").value);
+      if (!rangeInput) return;
+      let [newMinLength, newMaxLength] = rangeInput;
+ 
+      // Určenie, či ide o odhadovaný čas
+      isEstimatedTime = (totalMinutes === 0 && episodes > 0);
+
+	  // Ak nebol zadaný celkový čas, ale bol zadaný počet epizód vypočíta sa celkový čas
+      if (isEstimatedTime) {
+        totalMinutes = episodes * (borderMin && borderMax && borderMin !== borderMax ? (borderMin + borderMax) / 2 : Math.max(borderMin, borderMax));
+      }
+
+      // Uloženie aktuálneho času do globálnej premennej
+      currentTotalMinutes = totalMinutes;
+
+	 // Výpočet odhadu počtu epizód v preloženej verzii na základe nových dĺžok epizód
+      let newEpisodeCountMax = newMinLength > 0 ? Math.round(totalMinutes / newMinLength) : 0;
+      let newEpisodeCountMin = newMaxLength > 0 ? Math.round(totalMinutes / newMaxLength) : 0;
+	  let avgNewEpisodes = (newEpisodeCountMax > 0 && newEpisodeCountMin > 0) ? Math.floor((newEpisodeCountMin + newEpisodeCountMax) / 2) : 0;
+
+	 // Výsledok
+      let resultText = "";
+      if (!isEstimatedTime) {
+        resultText = `<strong>Zadaný celkový čas seriálu v pôvodnom jazyku:</strong> ${Math.floor(totalMinutes / 60)} hod ${totalMinutes % 60} min <br>`;
+      } else {
+		resultText = `<strong>Odhadovaný celkový čas:</strong> <span id="estimatedTime">${Math.floor(totalMinutes / 60)} hod ${Math.round(totalMinutes % 60)} min</span> 
+		<span class="time-adjuster" style="display: inline-flex; align-items: center; margin-left: 10px;">
+			<select id="timeAdjustValue" class="form-select form-select-sm" style="width: auto; margin-right: 5px;">
+				<option value="30">30min</option>
+				<option value="45">45min</option>
+				<option value="60">1h</option>
+				<option value="120">2h</option>
+				<option value="180">3h</option>
+				<option value="240">4h</option>
+			</select>
+			<div class="btn-group btn-group-sm">
+				<button class="btn btn-success" onclick="adjustTime(true)">+</button>
+				<button class="btn btn-warning" onclick="adjustTime(false)">-</button>
+				<button class="btn btn-danger" onclick="resetTime()">RESET</button>
+			</div>
+		</span><br>`;		
+		  }
+
+      resultText += `<strong>Celkový čas seriálu v minutách:</strong> <span id="totalMinutesDisplay">${Math.round(totalMinutes)}</span> minút <br><br>`;
+	
+	function sklonujEpizody(count) {
+		if (count === 1) {
+			return "epizódu";
+		} else if (count >= 2 && count <= 4) {
+			return "epizódy";
+		} else {
+			return "epizód";
+		}
+	}
+	
+    // Výsledný text o počte epizód
+	if (newMinLength === newMaxLength) {
+		resultText += `<strong>Odhadovaná dĺžka seriálu je </strong> <span id="episodeCount">${avgNewEpisodes}</span> ${sklonujEpizody(avgNewEpisodes)}.`;
+	} else if (newEpisodeCountMin !== newEpisodeCountMax) {
+		resultText += `<strong>Preložený seriál by mohol mať približne od</strong> <span id="minEpisodeCount">${newEpisodeCountMin}</span> <strong>do</strong> <span id="maxEpisodeCount">${newEpisodeCountMax}</span> ${sklonujEpizody(newEpisodeCountMax)}.<br>`;
+		resultText += `<strong>Odhadovaná dĺžka seriálu: </strong> <span id="avgEpisodeCount">${avgNewEpisodes}</span> ${sklonujEpizody(avgNewEpisodes)}.`;
+	} else {
+		resultText += `<strong>Preložený seriál by mohol mať</strong> <span id="singleEpisodeCount">${newEpisodeCountMin}</span> ${sklonujEpizody(newEpisodeCountMin)}.`;
+	}
+	  
+      document.getElementById("result").innerHTML = resultText;
+
+      // Uložíme hodnoty pre možnú úpravu času
+      if (isEstimatedTime) {
+        localStorage.setItem('currentMinLength', newMinLength);
+        localStorage.setItem('currentMaxLength', newMaxLength);
+      }
+    }
+ 
+    // Funkcia na úpravu času a prepočet počtu epizód
+    function adjustTime(add) {
+      if (!isEstimatedTime) return;
+
+      // Získanie hodnoty na úpravu
+      let adjustValue = parseInt(document.getElementById("timeAdjustValue").value);
+      
+      // Pridanie alebo odobratie času
+      if (add) {
+        currentTotalMinutes += adjustValue;
+      } else {
+        currentTotalMinutes = Math.max(0, currentTotalMinutes - adjustValue);
+      }
+
+      // Aktualizácia zobrazenia času
+      let hours = Math.floor(currentTotalMinutes / 60);
+      let minutes = Math.round(currentTotalMinutes % 60);
+      document.getElementById("estimatedTime").textContent = `${hours} hod ${minutes} min`;
+      document.getElementById("totalMinutesDisplay").textContent = Math.round(currentTotalMinutes);
+
+      // Prepočet počtu epizód
+      let newMinLength = parseInt(localStorage.getItem('currentMinLength')) || 40;
+      let newMaxLength = parseInt(localStorage.getItem('currentMaxLength')) || 50;
+
+      let newEpisodeCountMax = newMinLength > 0 ? Math.round(currentTotalMinutes / newMinLength) : 0;
+      let newEpisodeCountMin = newMaxLength > 0 ? Math.round(currentTotalMinutes / newMaxLength) : 0;
+      let avgNewEpisodes = (newEpisodeCountMax > 0 && newEpisodeCountMin > 0) ? Math.floor((newEpisodeCountMin + newEpisodeCountMax) / 2) : 0;
+
+      // Aktualizácia počtu epizód v HTML
+      if (document.getElementById("episodeCount")) {
+        document.getElementById("episodeCount").textContent = avgNewEpisodes;
+      }
+      if (document.getElementById("minEpisodeCount")) {
+        document.getElementById("minEpisodeCount").textContent = newEpisodeCountMin;
+      }
+      if (document.getElementById("maxEpisodeCount")) {
+        document.getElementById("maxEpisodeCount").textContent = newEpisodeCountMax;
+      }
+      if (document.getElementById("avgEpisodeCount")) {
+        document.getElementById("avgEpisodeCount").textContent = avgNewEpisodes;
+      }
+      if (document.getElementById("singleEpisodeCount")) {
+        document.getElementById("singleEpisodeCount").textContent = newEpisodeCountMin;
+      }
+    }
+
+   // Predvolený rozsah minutáže preložených epizód je 40-50 (40+50=90/2= 45 minút)
+    function parseRange(input) { 
+      if (!input.trim()) return [40, 50];
+      let parts = input.split('-').map(p => p.trim()).filter(p => p !== "");
+      if (parts.length === 1) return [parseInt(parts[0]), parseInt(parts[0])];
+      if (parts.length === 2) return [parseInt(parts[0]), parseInt(parts[1])];
+      alert("Neplatný rozsah! Použite napr. '43-50'.");
+      return null;
+    }
+
+    // Funkcia na spracovanie a súčet počtu epizód
+    function parseEpisodeCount(input) {
+      input = input.replace(/\s+/g, "");
+      if (!input) return 0;
+      if (input.includes('+')) return input.split('+').reduce((acc, val) => acc + parseInt(val), 0);
+      return parseInt(input);
+    }
+	
+	// Funkcia blokovania vstupu pre počet epizód, min a max - vypíše informatívny text pod bunkami, ak je vyplnený celkový čas (hodiny alebo minúty)
+	function toggleEpisodeInput() {
+		let hours = document.getElementById("hours").value;
+		let minutes = document.getElementById("minutes").value;
+		let minMinutes = document.getElementById("borderMin");
+		let maxMinutes = document.getElementById("borderMax");
+		let episodesInput = document.getElementById("episodes");
+		let episodeMsg = document.getElementById("episodeMsgAlert");
+		let minMsg = document.getElementById("minMsgAlert");
+		let maxMsg = document.getElementById("maxMsgAlert");
+
+		if (hours || minutes) {
+			episodesInput.disabled = true;
+			episodesInput.value = "";
+			minMinutes.disabled = true;
+			minMinutes.value = "";
+			maxMinutes.disabled = true;
+			maxMinutes.value = "";
+			episodeMsg.innerHTML = "Tento údaj nie potrebný pri výpočte, pretože sa použije zadaný čas.";
+			minMsg.innerHTML = "Tento údaj nie potrebný pri výpočte, pretože sa použije zadaný čas.";
+			maxMsg.innerHTML = "Tento údaj nie potrebný pri výpočte, pretože sa použije zadaný čas.";
+		} else {
+			episodesInput.disabled = false;
+			minMinutes.disabled = false;
+			maxMinutes.disabled = false;
+			episodeMsg.innerHTML = "";
+			minMsg.innerHTML = "";
+			maxMsg.innerHTML = "";
+		}
+	}
+
+	// Funkcia blokovania vstupu pre celkový čas, ak je zadávaný odhad epizód (min, max a počet epizód)
+	function toggleTimeInput() {
+		let episodes = document.getElementById("episodes").value;
+		let borderMin = document.getElementById("borderMin").value;
+		let borderMax = document.getElementById("borderMax").value;
+		let hoursInput = document.getElementById("hours");
+		let minutesInput = document.getElementById("minutes");
+		let episodeMsg = document.getElementById("episodeMsgAlert");
+		let hoursMsg = document.getElementById("hoursMsgAlert");
+		let minutesMsg = document.getElementById("minutesMsgAlert");
+
+		if (episodes || borderMin || borderMax) {
+			hoursInput.disabled = true;
+			minutesInput.disabled = true;
+			minutesInput.value = "";
+			episodeMsg.innerHTML = "";
+			hoursMsg.innerHTML = "Odhadovaný počet hodín bude vypočítaný.";
+			minutesMsg.innerHTML = "Odhadovaný počet minút bude vypočítaný.";
+		} else {
+			hoursInput.disabled = false;
+			minutesInput.disabled = false;
+			hoursMsg.innerHTML = ""; 
+			minutesMsg.innerHTML = "";
+		}
+	}
+
+document.getElementById("episodes").addEventListener("input", toggleTimeInput);
+document.getElementById("borderMin").addEventListener("input", toggleTimeInput);
+document.getElementById("borderMax").addEventListener("input", toggleTimeInput);
+
+document.getElementById("hours").addEventListener("input", toggleEpisodeInput);
+document.getElementById("minutes").addEventListener("input", toggleEpisodeInput);
+
+	function clearInputs() {
+    // Vymazanie hodnôt vstupov
+    document.getElementById("hours").value = "";
+    document.getElementById("minutes").value = ""; 
+    document.getElementById("episodes").value = "";
+    document.getElementById("episodeRange").value = ""; 
+	document.getElementById("borderMin").value = ""; 
+    document.getElementById("borderMax").value = "";
+	
+    // Reset globálnej premennej na pôvodný čas
+    currentTotalMinutes = 0;
+    isEstimatedTime = false;
+
+    // Vymazanie chybovej správy
+    document.getElementById("episodeMsgAlert").innerHTML = "";
+    document.getElementById("minMsgAlert").innerHTML = "";
+    document.getElementById("maxMsgAlert").innerHTML = "";
+    document.getElementById("hoursMsgAlert").innerHTML = "";
+    document.getElementById("minutesMsgAlert").innerHTML = "";
+
+    // Odblokovanie vstupov pre hodiny a minúty
+    document.getElementById("hours").disabled = false;
+    document.getElementById("minutes").disabled = false;
+
+    toggleEpisodeInput();
+    
+    // Vymazanie výpočtu
+    document.getElementById("result").innerHTML = "";
+}
+	// Nápoveda
+		document.addEventListener("DOMContentLoaded", function () {
+		  var helpIcon = document.getElementById("helpIcon");
+		  var tooltip = document.getElementById("tooltip");
+
+		  helpIcon.addEventListener("mouseover", function () {
+			tooltip.style.display = "block";
+
+			// Získaj pozíciu ❓
+			var rect = helpIcon.getBoundingClientRect();
+			var tooltipWidth = tooltip.offsetWidth;
+			var windowWidth = window.innerWidth;
+
+			// Základná pozícia tooltipu - vedľa ❓ vpravo
+			var leftPos = rect.right + 10; 
+			var topPos = rect.top + window.scrollY;
+
+			// Ak je tooltip mimo pravého okraja, posunieme ho naľavo od ❓
+			if (leftPos + tooltipWidth > windowWidth) {
+			  leftPos = rect.left - tooltipWidth - 10;
+			}
+
+			tooltip.style.top = topPos + "px";
+			tooltip.style.left = leftPos + "px";
+		  });
+
+		  helpIcon.addEventListener("mouseout", function () {
+			tooltip.style.display = "none";
+		  });
+		});
+		
+	  function resetTime() {
+		  calculateEpisodes();
+	  }
+	  </script>
+	  
+	  <footer class="text-center py-4">
+		<p>Výpočty majú iba informatívny charakter.</p>
+		<p>&copy; <strong><a href="https://github.com/Mar-Pol/prepocet-epizod-serialu" target="_blank">MarPol</a></strong> 2025</p>
+	  </footer>
+
+	</body>
+	</html>
