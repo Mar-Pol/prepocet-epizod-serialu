@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="sk">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Odhad počtu epizód preloženého seriálu na základe dát pôvodnej nepreloženej verzie seriálu.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <title>Koľko časti by mohol mať seriál?</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body class="container py-5 dark-mode">
+    <label class="toggle-switch">
+    <input type="checkbox" id="themeToggle" onchange="toggleDarkMode()">
+    <span class="slider">
+    <span class="icon">🌞</span>
+    </span>
+    </label>
+    <div class="text-center mb-4 position-relative">
+      <span id="helpIcon">❓</span>
+      <h2 class="fw-bold mb-0">
+        <a href="https://www.csfd.sk/" target="_blank">
+        Prepočet epizód seriálu
+        </a>
+      </h2>
+    </div>
+    <div id="tooltip">
+      <p><strong>Presnejší výpočet:</strong> Zadaj celkový čas + rozsah preložených epizód.</p>
+      <p><strong>Odhadovaný počet epizód:</strong> Zadaj min-max minutáž pôvodného jazyka + počet epizód + rozsah minutáže preložených epizód.</p>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">
+      Celkový čas seriálu:
+      </label>
+      <div class="row">
+        <div class="col-md-6">
+          <input type="number" id="hours" class="form-control" placeholder="Hodiny" min="1">
+          <span id="hoursMsgAlert"></span>
+        </div>
+        <div class="col-md-6">
+          <input type="number" id="minutes" class="form-control" placeholder="Minúty" min="1">
+          <span id="minutesMsgAlert"></span>
+        </div>
+      </div>
+    </div>
+    <div class="mb-3 row">
+      <div class="col">
+        <label class="form-label">Min. minutáž (dĺžka epizódy) v pôvodnom jazyku:</label>
+        <input type="number" id="borderMin" class="form-control" placeholder="napr. 100" min="1" oninput="validateInput(this)">
+        <small id="minMsgAlert" class="text-muted"></small>
+      </div>
+      <div class="col">
+        <label class="form-label">Max. minutáž (dĺžka epizódy) v pôvodnom jazyku:</label>
+        <input type="number" id="borderMax" class="form-control" placeholder="napr. 200" min="1" oninput="validateInput(this)">
+        <small id="maxMsgAlert" class="text-muted"></small>
+      </div>
+    </div>
+    <div class="mb-3 custom-padding-mb3-text">
+      <label class="form-label">Počet epizód v pôvodnom jazyku:</label>
+      <input type="text" id="episodes" class="form-control" placeholder="napr. 50 (vrátane podpory súčtu epizód)">
+      <small id="episodeMsgAlert" class="text-muted"></small>
+    </div>
+    <div class="mb-3 custom-padding-mb3-text">
+      <label class="form-label">Rozsah minutáže preložených epizód:</label>
+      <input type="text" id="episodeRange" class="form-control" placeholder="Nechaj prázdne pre predvolených 40-50 alebo zadaj iný rozsah. Možeš zadať aj konkretnú hodnotu napr. 45.">
+    </div>
+    <div id="result"></div>
+    <div class="d-flex align-items-end my-3">
+      <button class="btn btn-primary px-5 py-2 rounded-pill" onclick="calculateEpisodes()">Vypočítať</button>
+      <button class="btn btn-danger px-4 py-2 rounded-pill" onclick="clearInputs()">Vymazať</button>
+    </div>
+    <script src="scripts.js"></script>
+    <footer>
+      <p>Výpočty majú iba informatívny charakter.</p>
+      <p>&copy; <strong><a href="https://github.com/Mar-Pol/prepocet-epizod-serialu" target="_blank">MarPol</a></strong> 2025</p>
+    </footer>
+  </body>
+</html>
