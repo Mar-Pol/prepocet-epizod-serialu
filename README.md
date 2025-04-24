@@ -40,3 +40,10 @@ Máš dve možnosti:
 
 ## ⚠️ UPOZORNENIE:
 **Výpočty majú iba informatívny charakter. Nie je možné presne "vypočítať" počet preložených epizód z pôvodného jazyka seriálu pretože epizódy majú rôzne dĺžky. Všetko funguje iba na základe premieru zo zadaných údajov.** 
+
+## Podporte projekt
+
+Ak by ste mi chceli kúpiť kávu, môžete tak urobiť [tu](https://revolut.me/marp0l)  
+Ďakujem ❤️!
+
+
