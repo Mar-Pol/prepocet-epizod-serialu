@@ -8,10 +8,9 @@ Jednoduchá webová aplikácia na odhad počtu epizód preloženej verzie seriá
 ✅ Optimalizované pre mobilné zariadenia  
 
 ## ⚡ Funkcie  
-✔️ Automatická kontrola vstupu a ošetrenie bežných chýb 
-✔️
-✔️ Vymazanie vstupov jedným klikom  
-✔️ Interaktívna nápoveda (po ukázaní myšou na otáznik)  
+✔️ Automatická kontrola vstupu a ošetrenie bežných chýb  
+✔️ Vymazanie vstupov jedným klikom   
+✔️ Interaktívna nápoveda (po ukázaní myšou na otáznik)   
 ✔️ Dynamická úprava odhadovaného času – po výpočte možno čas ručne doladiť (napr. ±30 min, ±1–4 hod, reset)
 
 ## 📌 Odkiaľ získať potrebné údaje? ##
@@ -34,8 +33,8 @@ Máš dve možnosti:
    **Výsledok sa zobrazí kliknutím na "Vypočítať**  
 
 ## 🌍 Spustenie offline HTML 
-1. Stiahni si `PrepočetEpizódSeriálu.html`  
-2. Otvor ho.  
+1. Stiahni si prečinok `Source Code`  
+2. Otvor `index.html`    
 3. Zadaj údaje a klikni na **„Vypočítať“**.  
 4. Ak chceš začať odznova, použi tlačidlo **„Vymazať“**.
 
